@@ -4,11 +4,12 @@ DIR=$(cd $(dirname $0); pwd -P)
 source ${DIR}/include.sh
 
 function usage {
-    echo "USAGE: $basename $0) [-e|-d] file"
+    echo "Encrypts the copied text with a random password"
+    echo "USAGE: $(basename $0) [-e|-d]"
     exit 1
 }
 
-if [ $# -lt 2 ]; then
+if [ $# -lt 1 ]; then
     usage
 fi
 
@@ -27,15 +28,17 @@ esac
 FILE="$2"
 
 if [ "${MODE}" == "encrypt" ]; then
-    if [ -f ${FILE}.gpg ]; then
-        rm -f ${FILE}.gpg
-    fi
     PW=$(get_pw)
-    gpg -c --batch --passphrase "${PW}" -o ${FILE}.gpg ${FILE}
+    pbpaste | gpg -c --batch --armor --passphrase "${PW}" 2>/dev/null
+    echo ""
     echo "P/W: ${PW}"
 elif [ "${MODE}" == "decrypt" ]; then
+    MSG=$(pbpaste)
     read -p "P/W: " PW
-    gpg -d --batch --passphrase "${PW}" ${FILE} > ${FILE%.*}
+    echo "***"
+    echo "${MSG}" | gpg -d --batch --armor --passphrase "${PW}" 2>/dev/null
+    echo ""
+    echo "***"
 fi
 
 exit 0
