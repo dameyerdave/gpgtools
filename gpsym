@@ -1,0 +1,41 @@
+#!/bin/bash
+
+DIR=$(cd $(dirname $0); pwd -P) 
+source ${DIR}/include.sh
+
+function usage {
+    echo "USAGE: $basename $0) [-e|-d] file"
+    exit 1
+}
+
+if [ $# -lt 2 ]; then
+    usage
+fi
+
+case "$1" in
+    '-d')
+        MODE="decrypt"
+        ;;
+    '-e')
+        MODE="encrypt"
+        ;;
+    *)
+        usage
+        ;;
+esac
+
+FILE="$2"
+
+if [ "${MODE}" == "encrypt" ]; then
+    if [ -f ${FILE}.gpg ]; then
+        rm -f ${FILE}.gpg
+    fi
+    PW=$(get_pw)
+    gpg -c --batch --passphrase "${PW}" -o ${FILE}.gpg ${FILE}
+    echo "P/W: ${PW}"
+elif [ "${MODE}" == "decrypt" ]; then
+    read -p "P/W: " PW
+    gpg -d --batch --passphrase "${PW}" ${FILE} > ${FILE%.*}
+fi
+
+exit 0
